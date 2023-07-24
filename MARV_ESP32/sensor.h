@@ -1,20 +1,18 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 
+/// One sensor in the sensor array
 class Sensor {
     public:
-        float line_position_raw;
-        float line_position;
-
-        void update();
+        Sensor(int pin, float filter_constant); 
+        
         void calibrate();
+        void update();
+        uint16_t get_value();
 
     private: 
-        int sensor_pins[7];
-        float sensor_values_raw[7];
-        float sensor_values[7];
-
-        uint16_t white_values[7];
-        uint16_t line_values[7];
-}
+        int pin;
+        uint16_t value, raw_value, green, cost;
+        float filter_constant;
+};
