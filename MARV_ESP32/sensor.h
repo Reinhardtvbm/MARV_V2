@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 
 /// One sensor in the sensor array
 class Sensor {
@@ -10,6 +10,7 @@ class Sensor {
         void calibrate();
         void update();
         uint16_t get_value();
+        uint16_t get_raw_value();
 
     private: 
         int pin;

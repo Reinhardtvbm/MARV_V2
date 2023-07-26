@@ -1,5 +1,6 @@
 #include "sensor.h"
-#include <cstdint>
+
+#include <Arduino.h>
 
 Sensor::Sensor(int pin, float filter_constant) {
     this->pin = pin;
@@ -27,9 +28,13 @@ void Sensor::calibrate() {
 
 void Sensor::update() {
     this->raw_value = (uint16_t)analogRead(this->pin); 
-    this->value = (this->filter_constant * this->value) + ((1 - this->filter_constant) * this->raw_value) + 0.5; // 0.5 for rounding
+    this->value = (uint16_t)((this->filter_constant * this->value) + ((1 - this->filter_constant) * this->raw_value) + 0.5); // 0.5 for rounding
 }
 
 uint16_t Sensor::get_value() {
     return this->value;
+}
+
+uint16_t Sensor::get_raw_value() {
+    return this->raw_value;
 }
