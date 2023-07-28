@@ -1,19 +1,20 @@
 #pragma once 
 
-#include <stdint.h>
+#include <Arduino.h>
 #include <Encoder.h>
+#include <stdint.h>
 
 /// One motor, including its encoder and controller
 class Motor {
     public:
-        Motor(int encoder_pin_A, int encoder_pin_B);
-        void set_speed();
+        Motor(int encoder_pin_A, int encoder_pin_B, int motor_pin_1, int motor_pin_2);
+        void set_speed(int speed);
+        float speed();
+        void encoder_interrupt();        
 
     private:
-        int encoder_pin_A, encoder_pin_B;
-        uint32_t encoder_counts;
+        long counts, prev_counts, time;
+        float motor_speed;
+        int encoder_pin_A, encoder_pin_B, motor_pin_1, motor_pin_2, num_speeds;
         Encoder encoder;
-
-        uint16_t speed();
-
 };
