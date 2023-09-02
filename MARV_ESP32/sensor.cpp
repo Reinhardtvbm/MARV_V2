@@ -11,6 +11,8 @@ Sensor::Sensor(int pin, float filter_constant) {
 
     this->green = 0;
     this->cost = 0;
+
+    pinMode(pin, INPUT);
 }
 
 void Sensor::calibrate() {
