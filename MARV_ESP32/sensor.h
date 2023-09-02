@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+
 /// One sensor in the sensor array
 class Sensor {
     public:

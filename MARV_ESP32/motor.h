@@ -8,7 +8,7 @@
 class Motor {
     public:
         Motor(int encoder_pin_A, int encoder_pin_B, int motor_pin_1, int motor_pin_2);
-        void set_speed(int speed);
+        void set_pwm(int pwm);
         float speed();
         void encoder_interrupt();        
 

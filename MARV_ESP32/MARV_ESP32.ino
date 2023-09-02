@@ -5,23 +5,21 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 
-#define RIGHT_FORWARD 10
-#define RIGHT_BACKWARD 11
-#define LEFT_FORWARD 6
-#define LEFT_BACKWARD 9
+WiFiUDP udp;
 
+boolean connected = false;
 const char* ssid = "RPC";
 const char* password = "boopboop";
 const char* server_ip = "192.168.137.1";
 const int port = 3000;
 
-const int encoderPinA = 2;
-const int encoderPinB = 3;
-
-WiFiUDP udp;
-boolean connected = false;
 int pins[7] = {A0, A1, A2, A3, A4, A5, A6};
 SensorArray sensor(0.99, 0.9, pins);
+
+int motor_left_pin1 = 2, motor_left_pin2 = 3, motor_right_pin1 = 4, motor_right_pin2 = 5;
+
+Motor left_motor(0, 0, motor_left_pin1, motor_left_pin2);
+Motor right_motor(0, 0, motor_right_pin1, motor_right_pin2);
 
 void setup() {
   pinMode(2, OUTPUT);
@@ -76,4 +74,3 @@ void send_udp(uint8_t* packet, int len) {
     udp.endPacket();
   }
 }
-

@@ -8,7 +8,7 @@ class SensorArray {
     public:
         SensorArray(float filter_constant, float filter_constant_pins, int* pins); 
         
-        void calibrate();
+        void calibrate(Motor* motor_left, Motor* motor_right);
         void update();
         float get_position();
 

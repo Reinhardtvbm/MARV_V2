@@ -1,4 +1,5 @@
 #include "sensor_array.h"
+#include "motor.h"
 
 #include <Arduino.h>
 
@@ -10,10 +11,21 @@ SensorArray::SensorArray(float filter_constant, float filter_constant_pins, int*
     this->filter_constant = filter_constant;
 }
         
-void SensorArray::calibrate() {
+void SensorArray::calibrate(Motor* motor_left, Motor* motor_right) {
     uint32_t start = millis();
 
+    bool change = false;
+    
+    motor_left->set_speed(-10);
+    motor_right->set_speed(10);
+  
     while (millis() - start < 20000) {
+        if (millis() - start > 10000 && change == false) {
+            motor_left->set_speed(10);
+            motor_right->set_speed(-10);
+            change - true;
+        }
+      
         for (int i = 0; i < 7; i++) {
             sensors[i]->update();
             uint16_t value = sensors[i]->get_value();
