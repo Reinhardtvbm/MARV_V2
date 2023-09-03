@@ -1,6 +1,24 @@
 
+<<<<<<< HEAD
 int sensor_pins[7] = {A0, A1, A2, A3, A4, A5, A6};
 uint16_t sensor_vals[7] = {0, 0, 0, 0, 0, 0, 0};
+=======
+WiFiUDP udp;
+
+boolean connected = false;
+const char* ssid = "RPC";
+const char* password = "boopboop";
+const char* server_ip = "192.168.137.1";
+const int port = 3000;
+
+int pins[7] = {A0, A1, A2, A3, A4, A5, A6};
+SensorArray sensor(0.99, 0.9, pins);
+>>>>>>> 2fec36058834f2fc45ccc9976220dbed31b8e519
+
+int motor_left_pin1 = 2, motor_left_pin2 = 3, motor_right_pin1 = 4, motor_right_pin2 = 5;
+
+Motor left_motor(0, 0, motor_left_pin1, motor_left_pin2);
+Motor right_motor(0, 0, motor_right_pin1, motor_right_pin2);
 
 void setup() {
   pinMode(2, OUTPUT);
@@ -109,6 +127,7 @@ void calibrate() {
     
     digitalWrite(15, LOW);
 }
+<<<<<<< HEAD
 
 float get_line_position() {
     float avg = 0;
@@ -155,3 +174,5 @@ void update_sensor(int index) {
   uint16_t raw_value = (uint16_t)analogRead(sensor_pins[index]); 
   sensor_vals[index] = (uint16_t)((sfilter_constant * sensor_vals[index]) + ((1 - sfilter_constant) * raw_value) + 0.5); // 0.5 for rounding
 }
+=======
+>>>>>>> 2fec36058834f2fc45ccc9976220dbed31b8e519

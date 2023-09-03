@@ -18,8 +18,14 @@ Motor::Motor(int encoder_pin_A, int encoder_pin_B, int motor_pin_1, int motor_pi
     this->prev_counts = 0;
 }
 
-void Motor::set_speed(int speed) {
-  analogWrite(this->motor_pin_1, speed);
+void Motor::set_pwm(int pwm) {
+    if (speed > 0) { 
+        analogWrite(motor_pin_2, 0);
+        analogWrite(motor_pin_1, pwm); 
+    } else {
+        analogWrite(motor_pin_1, 0);
+        analogWrite(motor_pin_2, pwm); 
+    }
 }
 
 // 60 encoder counts per revoltion
