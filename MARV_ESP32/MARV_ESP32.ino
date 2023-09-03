@@ -1,79 +1,157 @@
-#include "sensor.h"
-#include "motor.h"
-#include "sensor_array.h"
-#include <Encoder.h>
-#include <WiFi.h>
-#include <WiFiUdp.h>
 
-#define RIGHT_FORWARD 10
-#define RIGHT_BACKWARD 11
-#define LEFT_FORWARD 6
-#define LEFT_BACKWARD 9
-
-const char* ssid = "RPC";
-const char* password = "boopboop";
-const char* server_ip = "192.168.137.1";
-const int port = 3000;
-
-const int encoderPinA = 2;
-const int encoderPinB = 3;
-
-WiFiUDP udp;
-boolean connected = false;
-int pins[7] = {A0, A1, A2, A3, A4, A5, A6};
-SensorArray sensor(0.99, 0.9, pins);
+int sensor_pins[7] = {A0, A1, A2, A3, A4, A5, A6};
+uint16_t sensor_vals[7] = {0, 0, 0, 0, 0, 0, 0};
 
 void setup() {
   pinMode(2, OUTPUT);
   analogWrite(2, 0);
 
-  pinMode(15, OUTPUT);
-  analogWrite(15, 0);
+  pinMode(3, OUTPUT);
+  analogWrite(3, 0);
 
-  Serial.begin(19200);
-  while (!Serial) delay(10);
+  pinMode(4, OUTPUT);
+  analogWrite(4, 0);
 
-  WiFi.onEvent(WiFiEvent);
-  WiFi.begin(ssid, password);
+  pinMode(5, OUTPUT);
+  analogWrite(5, 0);
 
-  while (!connected) {
-      Serial.print(".");
-      delay(100);
+  for (int i = 0; i < 7; i++) {
+    pinMode(sensor_pins[i], INPUT);
+    uint16_t raw_value = (uint16_t)analogRead(sensor_pins[i]); 
+    sensor_vals[i] = raw_value;
   }
 
-  udp.begin(WiFi.localIP(), port);
-
-  sensor.calibrate();
+  Serial.begin(115200);
 }
+
+
+
+float maxs[7] = {0, 0, 0, 0, 0, 0, 0};
+float mins[7] = {3000, 3000, 3000, 3000, 3000, 3000, 3000};
+
+float sfilter_constant = 0.9;
+float afilter_constant = 0.9;
+
+float _position = 0.0;
+
+float setpoint = 3000.0;
+const int const_speed = 45;
+const int max_diff = 210;
+
+int left_pwm;
+int right_pwm;
 
 void loop() {
-    sensor.update();
-    float line_position = sensor.get_position();
+    calibrate();
 
-    Serial.print("Position:\t");
-    Serial.println(line_position);
-}
+    while (1) {
+        float line_pos = get_line_position();
 
+        float pwm = 205.0 * ((3000.0 - line_pos) / 3000.0);
 
-void WiFiEvent(WiFiEvent_t event){
-    switch(event) {
-      case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-          connected = true;
-          Serial.println("Connected to server :)");
-          break;
-      case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-          Serial.println("WiFi lost connection");
-          connected = false;
-          break;
-      default: break;
+        int lpwm = constrain(150 - pwm, -255, 255);
+        int rpwm = constrain(150 + pwm, -255, 255);
+
+        Serial.print(lpwm);
+        Serial.print('\t');
+        Serial.print(rpwm);
+        Serial.print('\t');
+        Serial.println(line_pos);
+        delayMicroseconds(800);
+        
+        if (lpwm > 0) {
+            analogWrite(2, 0);
+            analogWrite(3, lpwm);
+        } else {
+            analogWrite(3, 0);
+            analogWrite(2, abs(lpwm));
+        }
+
+        if (rpwm > 0) {
+            analogWrite(5, 0);
+            analogWrite(4, rpwm);
+        } else {
+            analogWrite(4, 0);
+            analogWrite(5, abs(rpwm));
+        }
     }
 }
 
-void send_udp(uint8_t* packet, int len) {
-  if (connected) {
-    udp.beginPacket(server_ip, port);
-    udp.write(packet, len);
-    udp.endPacket();
-  }
+void calibrate() {
+    for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 7; i++) {
+            Serial.print(maxs[i]);
+            Serial.print('\t');
+        }
+
+        Serial.println(' ');
+    
+        for (int i = 0; i < 7; i++) {
+            Serial.print(mins[i]);
+            Serial.print('\t');
+        }
+
+        Serial.println(' ');
+        for (int i = 0; i < 7; i++) {
+            
+            update_sensor(i);
+            float value = (float)sensor_vals[i];
+            
+            if (value > maxs[i]) {
+                maxs[i] = value;
+            }
+            if (value < mins[i]) {
+                mins[i] = value;
+            }
+        }    
+    }  
+
+    
+    digitalWrite(15, LOW);
 }
 
+float get_line_position() {
+    float avg = 0;
+    float sum = 0;
+    
+    for (int i = 0; i < 7; i++) {
+        update_sensor(i);
+        float value = (float)sensor_vals[i];
+//        
+            
+
+        float cost = (value - mins[i]) / (maxs[i] - mins[i]);
+
+        if (cost < 0) {
+            cost = 1.0 + cost;
+        } else {
+            cost = 1.0 - cost;
+        }
+
+        cost *= cost;
+        
+        if (cost < 0.4) {
+            cost = 0.0;
+        }
+
+        avg += cost * (i * 1000);
+        sum += cost;
+
+//        Serial.print(value);
+//        Serial.print('\t');
+    }
+
+    
+    if (sum != 0) { 
+        float raw_position = (float)(avg / sum); 
+        _position = afilter_constant * _position + ((1.0 - afilter_constant) * raw_position);
+    }
+
+//    Serial.println(' ');
+    return _position;
+}
+
+void update_sensor(int index) {
+  uint16_t raw_value = (uint16_t)analogRead(sensor_pins[index]); 
+  sensor_vals[index] = (uint16_t)((sfilter_constant * sensor_vals[index]) + ((1 - sfilter_constant) * raw_value) + 0.5); // 0.5 for rounding
+}

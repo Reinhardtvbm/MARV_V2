@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdint.h>
 #include "sensor.h"
+#include <Arduino.h>
 
 /// One sensor in the sensor array
 class SensorArray {
@@ -9,12 +9,12 @@ class SensorArray {
         SensorArray(float filter_constant, float filter_constant_pins, int* pins); 
         
         void calibrate();
-        void update();
+        void _update();
         float get_position();
 
     private: 
-        float position, filter_constant;
-        Sensor* sensors[7];
-        double mins[7] = {3000,3000,3000,3000,3000,3000,3000};
-        double maxs[7] = {0,0,0,0,0,0,0};
+        float _position, filter_constant;
+        Sensor** sensors = NULL;
+        float* mins = NULL;
+        float* maxs = NULL;
 };

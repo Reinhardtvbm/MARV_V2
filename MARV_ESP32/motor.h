@@ -1,7 +1,6 @@
 #pragma once 
 
 #include <Arduino.h>
-#include <Encoder.h>
 #include <stdint.h>
 
 /// One motor, including its encoder and controller
@@ -16,5 +15,4 @@ class Motor {
         long counts, prev_counts, time;
         float motor_speed;
         int encoder_pin_A, encoder_pin_B, motor_pin_1, motor_pin_2, num_speeds;
-        Encoder encoder;
 };

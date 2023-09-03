@@ -1,6 +1,6 @@
 #include "motor.h"
 
-Motor::Motor(int encoder_pin_A, int encoder_pin_B, int motor_pin_1, int motor_pin_2) : encoder(encoder_pin_A, encoder_pin_B) {
+Motor::Motor(int encoder_pin_A, int encoder_pin_B, int motor_pin_1, int motor_pin_2){
     this->encoder_pin_A = encoder_pin_A;
     this->encoder_pin_B = encoder_pin_B;
 
