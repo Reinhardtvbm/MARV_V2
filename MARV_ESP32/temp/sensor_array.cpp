@@ -13,28 +13,10 @@ SensorArray::SensorArray(float filter_constant, float filter_constant_pins, int*
     this->filter_constant = filter_constant;
 }
         
-<<<<<<< HEAD
 void SensorArray::calibrate() {
 //    uint32_t start = millis();
 //
     for (int i = 0; i < 5000; i++) {
-=======
-void SensorArray::calibrate(Motor* motor_left, Motor* motor_right) {
-    uint32_t start = millis();
-
-    bool change = false;
-    
-    motor_left->set_speed(-10);
-    motor_right->set_speed(10);
-  
-    while (millis() - start < 20000) {
-        if (millis() - start > 10000 && change == false) {
-            motor_left->set_speed(10);
-            motor_right->set_speed(-10);
-            change - true;
-        }
-      
->>>>>>> 2fec36058834f2fc45ccc9976220dbed31b8e519
         for (int i = 0; i < 7; i++) {
 //            sensors[i]->update_sensor();
 //            uint16_t value = sensors[i]->get_value();
