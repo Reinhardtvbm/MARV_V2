@@ -1,3 +1,4 @@
+
 #define NUM_SENSORS 5
 
 int sensor_pins[NUM_SENSORS] = {A0, A1, A2, A3, A4};
@@ -33,25 +34,34 @@ int16_t maxs[NUM_SENSORS] = {0, 0, 0, 0, 0};
 int16_t mins[NUM_SENSORS] = {5000, 5000, 5000, 5000, 5000};
 
 float sfilter_constant = 0.9;
-float afilter_constant = 0.9;
+float afilter_constant = 0.0;
 
 float _position = 0;
 
 float setpoint = 2000;
 float error = 0;
-const int const_speed = 70;
-const int max_diff = 100;
+const int const_speed = 100;
+const int max_diff = 140;
+const int max_speed = 200;
 
 float Kp = 1;
-float Kd = 0.1;
-float ki = 0.0;
+float Kd = 0.05;
+float Ki = 0.05;
+
+float integral;
+float control_out = 0;
 
 int left_pwm;
 int right_pwm;
 
 void loop() {
     calibrate();
-
+    
+    analogWrite(2, 0);
+    analogWrite(3, 0);
+    analogWrite(5, 0);
+    analogWrite(4, 0);
+    
     uint32_t curr_time = micros();
     
     while (1) {
@@ -60,27 +70,36 @@ void loop() {
 
         float dt = (float)(new_time - curr_time) / 1000000.0;
         
-        float prop = Kp * line_pos;
-        float der = Kd * (new_error - error) / dt;
-        float integ = Ki * new_error * dt;
+        float prop = Kp * new_error;
+        float der = Kd * ((new_error - error) / dt);
 
-        float control_out = prop + der + integ;
+        float i_add = new_error * dt;
+
+        if ((i_add > 0 && control_out <= 2000) || (i_add <= 0 && control_out >= -2000)) {
+            integral += new_error * dt;
+        }
+        
+        float integ = Ki * integral;
+
+        control_out = prop + der + integ;
         
         error = new_error;
         curr_time = new_time;
         
         float pwm = max_diff * ((setpoint - control_out) / setpoint);
-        
-        int lpwm = constrain(const_speed + (int)pwm, -255, 255);
-        int rpwm = constrain(const_speed - (int)pwm, -255, 255);
+
+
+        int speed = max_speed - abs(pwm);
+        int lpwm = constrain(speed - (int)pwm, -255, 255);
+        int rpwm = constrain(speed + (int)pwm, -255, 255);
 
         
-        Serial.println(line_pos);
-        Serial.print('\t');
+        Serial.println(new_error);
+        Serial.print("|\t");
         Serial.print(control_out);
-        Serial.print('\t');
+        Serial.print("|\t\t");
         Serial.print(dt, 6);
-        delayMicroseconds(800);
+        delayMicroseconds(500);
         
         if (lpwm > 0) {
             analogWrite(2, 0);
@@ -143,13 +162,18 @@ float get_line_position() {
         update_sensor(i);
         float value = (float)sensor_vals[i];
 
-        float cost = constrain((value - mins[i]) / (maxs[i] - mins[i]), 0.0, 1.0);
+        float distance = (value - mins[i]) / (maxs[i] - mins[i]);
 
+        if (distance < 0.0) {
+          distance = 1.0;
+        }
+
+        float cost = 1.0 - distance;
+        
         if (cost < 0.45) {
             cost = 0.0;
         }
 
-        cost *= cost;
         
         avg += cost * (i * 1000);
         sum += cost;
